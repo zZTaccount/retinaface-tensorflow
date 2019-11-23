@@ -12,8 +12,5 @@ results
 TODO
 --
 There is still a gap between the accuracy of the model in the paper, and I am trying to improve it.\
-<<<<<<< HEAD
 If you have any questions, please feel free to contact me, and we can discuss together.
-=======
-If you have any questions, please feel free to contact me, and we can discuss together.
->>>>>>> 2a4caf2ae00adf226914bfdf6d40df3c96e45fd3
+
