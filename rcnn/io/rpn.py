@@ -557,7 +557,7 @@ class AA:
     #print('fg count', len(fg_inds))
 
     # subsample positive labels if we have too many
-    if config.TRAIN.RPN_ENABLE_OHEM==0: #TODO :这样就没有做在线难例挖掘，而是随机选择样本组成1:3
+    if config.TRAIN.RPN_ENABLE_OHEM==0:
       fg_inds = np.where(labels == 1)[0]
       num_fg = int(config.TRAIN.RPN_FG_FRACTION * config.TRAIN.RPN_BATCH_SIZE)
       if len(fg_inds) > num_fg:
@@ -577,7 +577,7 @@ class AA:
       bg_inds = np.where(labels == 0)[0]
       num_bg = len(bg_inds)
 
-    #print('anchor stat', num_fg, num_bg)
+    print('INFO: anchor stat: num_fg={}, num_bg={}'.format(num_fg, num_bg))
 
     #TODO： 开始计算loss需要的bbox_targets
     bbox_targets = np.zeros((len(inds_inside), bbox_pred_len), dtype=np.float32)
@@ -599,20 +599,9 @@ class AA:
         # print('gt_landmarks.shape =',gt_landmarks.shape) #(K,5,3)
         a_landmarks = gt_landmarks[argmax_overlaps,:,:] #(16800,5,3)
         landmark_targets[:] = landmark_transform(anchors, a_landmarks)
-        invalid = np.where(a_landmarks[:,0,2]<0.0)[0]
+        invalid = np.where(a_landmarks[:,0,2]<0.0)[0] #-1表示没有五点
         landmark_weights[invalid, :] = 0.0
-    #tb = datetime.datetime.now()
-    #self._times[2] += (tb-ta).total_seconds()
-    #ta = datetime.datetime.now()
 
-    # if DEBUG:
-    #    _sums = bbox_targets[labels == 1, :].sum(axis=0)
-    #    _squared_sums = (bbox_targets[labels == 1, :] ** 2).sum(axis=0)
-    #    _counts = np.sum(labels == 1)
-    #    means = _sums / (_counts + 1e-14)
-    #    stds = np.sqrt(_squared_sums / _counts - means ** 2)
-    #    print ('means', means)
-    #    print ('stdevs', stds)
 
     # print(labels.shape, total_anchors, inds_inside.shape, inds_inside[0], inds_inside[-1])
     #unmap函数的作用是将第一个参数构造回totalanchor的形状，inds_inside的位置为正确值，其他位置为填充值
@@ -622,17 +611,6 @@ class AA:
     if landmark:
       landmark_targets = AA._unmap(landmark_targets, total_anchors, inds_inside, fill=0)
       landmark_weights = AA._unmap(landmark_weights, total_anchors, inds_inside, fill=0)
-
-    #if DEBUG:
-    #    if gt_boxes.size > 0:
-    #        print 'rpn: max max_overlaps', np.max(max_overlaps)
-    #    print 'rpn: num_positives', np.sum(labels == 1)
-    #    print 'rpn: num_negatives', np.sum(labels == 0)
-    #    _fg_sum = np.sum(labels == 1)
-    #    _bg_sum = np.sum(labels == 0)
-    #    _count = 1
-    #    print 'rpn: num_positive avg', _fg_sum / _count
-    #    print 'rpn: num_negative avg', _bg_sum / _count
 
     # resahpe
     label_list = list()
@@ -656,16 +634,16 @@ class AA:
           landmark_target = landmark_targets[sum(anchors_num_range[:i+1]):sum(anchors_num_range[:i+1])+anchors_num_range[i+1]]
           landmark_weight = landmark_weights[sum(anchors_num_range[:i+1]):sum(anchors_num_range[:i+1])+anchors_num_range[i+1]]
 
-        _label = _label.reshape((1, feat_height, feat_width, A))#TODO: .transpose(0, 3, 1, 2) #(1,20,20,2)
-        _label = _label.reshape((1, A * feat_height * feat_width)) #(1,800)
+        _label = _label.reshape((1, feat_height, feat_width, A))#TODO: #(1,20,20,2)
+        _label = _label.reshape((1, feat_height * feat_width * A)) #(1,800)
         bbox_target = bbox_target.reshape((1, feat_height*feat_width, A * bbox_pred_len)) #(i,8400,8)
         bbox_weight = bbox_weight.reshape((1, feat_height*feat_width, A * bbox_pred_len))
         label['%s_label_stride%d'%(prefix, stride)] = _label
         label['%s_bbox_target_stride%d'%(prefix,stride)] = bbox_target
         label['%s_bbox_weight_stride%d'%(prefix,stride)] = bbox_weight
         if landmark:
-          landmark_target = landmark_target.reshape((1, feat_height*feat_width, A * landmark_pred_len)).transpose(0, 2, 1)#(i,20,8400)
-          landmark_weight = landmark_weight.reshape((1, feat_height*feat_width, A * landmark_pred_len)).transpose((0, 2, 1))
+          landmark_target = landmark_target.reshape((1, feat_height*feat_width, A * landmark_pred_len))#(i,8400,20)
+          landmark_weight = landmark_weight.reshape((1, feat_height*feat_width, A * landmark_pred_len))
           label['%s_landmark_target_stride%d'%(prefix,stride)] = landmark_target
           label['%s_landmark_weight_stride%d'%(prefix,stride)] = landmark_weight
         #print('in_rpn', stride,_label.shape, bbox_target.shape, bbox_weight.shape, file=sys.stderr)
@@ -685,15 +663,11 @@ class AA:
 
     label.update({'%s_label'%prefix: label_concat,
             '%s_bbox_target'%prefix: bbox_target_concat,
-            '%s_bbox_weight'%prefix: bbox_weight_concat}
-            )
+            '%s_bbox_weight'%prefix: bbox_weight_concat})
     if landmark:
-      landmark_target_concat = np.concatenate(landmark_target_list, axis=2)
-      landmark_weight_concat = np.concatenate(landmark_weight_list, axis=2)
+      landmark_target_concat = np.concatenate(landmark_target_list, axis=1)
+      landmark_weight_concat = np.concatenate(landmark_weight_list, axis=1)
       label['%s_landmark_target'%prefix] = landmark_target_concat
       label['%s_landmark_weight'%prefix] = landmark_weight_concat
-    #tb = datetime.datetime.now()
-    #self._times[3] += (tb-ta).total_seconds()
-    #ta = datetime.datetime.now()
-    #print(self._times)
+
     return label

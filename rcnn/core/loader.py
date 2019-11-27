@@ -84,9 +84,9 @@ def label_concat(labels):
     ret_group['face_bbox_weight'] = np.concatenate(
         [labels['face_bbox_weight_stride%s' % stride] for stride in config.RPN_FEAT_STRIDE], axis=1)
     ret_group['face_landmark_target'] = np.concatenate(
-        [labels['face_landmark_target_stride%s' % stride] for stride in config.RPN_FEAT_STRIDE], axis=2)
+        [labels['face_landmark_target_stride%s' % stride] for stride in config.RPN_FEAT_STRIDE], axis=1)
     ret_group['face_landmark_weight'] = np.concatenate(
-        [labels['face_landmark_weight_stride%s' % stride] for stride in config.RPN_FEAT_STRIDE], axis=2)
+        [labels['face_landmark_weight_stride%s' % stride] for stride in config.RPN_FEAT_STRIDE], axis=1)
     ind = np.where(ret_group['face_label']==1) #两维，就返回两个array
     # print('core/loader: ind=',ind)
     label_weight = np.zeros_like(ret_group['face_label'])

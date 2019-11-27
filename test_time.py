@@ -8,8 +8,8 @@ from retinaface import RetinaFace
 import argparse
 import time
 
-os.environ['CUDA_VISIBLE_DEVICES']='0'
-thresh = 0.5
+os.environ['CUDA_VISIBLE_DEVICES']='3'
+thresh = 0.7
 # scales = [640, 640]
 # scales = [1280, 1280]
 
@@ -18,7 +18,7 @@ gpuid = 0
 
 # imgpath='t3.jpg'
 # prefix='./model/focal/loss=117.88.ckpt-2'
-prefix='./model/new/loss=47.37.ckpt-10'
+prefix='./model/cls-bbox-/loss=0.46.ckpt-17'
 # prefix = './model/retina11-7-23/loss=13.47.ckpt-13'
 
 def parse_args():
@@ -33,7 +33,7 @@ def test(path,imgname):
     scales = [640, 640]
     args = parse_args()
     print('args=', args)
-    detector = RetinaFace(args.network, gpuid,nms=0.3)
+    detector = RetinaFace(args.network, gpuid, nms=0.3)
 
     img = cv2.imread(path+imgname)
     print(img.shape)

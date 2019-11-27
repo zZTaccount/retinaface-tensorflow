@@ -12,7 +12,7 @@ from rcnn.processing.bbox_transform import bbox_overlaps
 from rcnn.dataset import retinaface
 from retinaface import RetinaFace
 
-os.environ['CUDA_VISIBLE_DEVICES']='1'
+os.environ['CUDA_VISIBLE_DEVICES']='3'
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Test widerface by retinaface detector')
@@ -24,11 +24,12 @@ def parse_args():
     parser.add_argument('--dataset-path', help='dataset path', default='./data/retinaface', type=str)
     parser.add_argument('--gpu', help='GPU device to test with', default=0, type=int)
     # testing
-    parser.add_argument('--prefix', help='model to test with', default='./model/new-ohem/loss=14.66.ckpt-14', type=str)
+    # parser.add_argument('--prefix', help='model to test with', default='./model/finetune/loss=31.97.ckpt-1', type=str)
+    parser.add_argument('--prefix', help='model to test with', default='./model/ohem-5cls/loss=5.53.ckpt-20', type=str)
     # parser.add_argument('--prefix', help='model to test with', default='./model/retinaface/loss=6.42.ckpt-46', type=str)
     parser.add_argument('--epoch', help='model to test with', default=0, type=int)
-    parser.add_argument('--output', help='output folder', default='./new-ohem', type=str)
-    parser.add_argument('--nms_thresh', help='nms threshold', default=0.4, type=float)
+    parser.add_argument('--output', help='output folder', default='./test', type=str)
+    parser.add_argument('--nms_thresh', help='nms threshold', default=0.2, type=float)
     parser.add_argument('--nocrop', help='', action='store_true')
     parser.add_argument('--thresh', help='valid detection threshold', default=0.6, type=float)
     parser.add_argument('--mode', help='test mode, 0 for fast, 1 for accurate', default=1, type=int)
@@ -90,14 +91,14 @@ def get_boxes(roi, pyramid):
       k = "%.3f"%score
       cv2.putText(im,k,(ibox[0]+2,ibox[1]+14), font, 0.6, (0,255,0), 2)
       #landmarks = box[6:21].reshape( (5,3) )
-      if landmarks is not None:
-        for l in range(5):
-          color = (0,255,0)
-          landmark = landmarks[i][l]
-          pp = (int(landmark[0]), int(landmark[1]))
-          if landmark[2]-0.5<0.0:
-            color = (0,0,255)
-          cv2.circle(im, (pp[0], pp[1]), 1, color, 2)
+      # if landmarks is not None:
+      #   for l in range(5):
+      #     color = (0,255,0)
+      #     landmark = landmarks[i][l]
+      #     pp = (int(landmark[0]), int(landmark[1]))
+      #     if landmark[2]-0.5<0.0:
+      #       color = (0,0,255)
+      #     cv2.circle(im, (pp[0], pp[1]), 1, color, 2)
     filename = './testimages/%d.jpg'%imgid
     cv2.imwrite(filename, im)
     print(filename, 'wrote')

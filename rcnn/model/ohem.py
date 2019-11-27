@@ -39,6 +39,9 @@ def no_ohem(cls_scores, labels, cls_losses):
     pos_precision_sum = 0.
     neg_precision_sum = 0.
 
+    def pos_loss0():
+        return 0.
+
     for ibatch in range(config.TRAIN.BATCH_IMAGES):
         label = tf.slice(labels, begin=[ibatch, 0], size=[1, -1], name='label_slice')
         label = tf.squeeze(label)
@@ -54,6 +57,8 @@ def no_ohem(cls_scores, labels, cls_losses):
         pos_score = tf.gather(score,pos_ind)
         pos_ind = tf.Print(pos_ind, [tf.shape(pos_score), pos_score],'Debug message: POS: score=', first_n=None, summarize=15, name='PRI_pos_score')
         pos_loss = tf.gather(cls_loss, pos_ind, name='gather_pos_loss')
+        pos_loss = tf.Print(pos_loss, [ibatch, tf.shape(pos_loss), pos_loss], 'INFO: 1111pos_loss= ',
+                            first_n=FIRSTN, summarize=150, name='PRI_pos_1_loss')
 
         neg_ind = tf.where(tf.equal(label,0))
         shape = tf.shape(neg_ind)[0]
@@ -70,8 +75,10 @@ def no_ohem(cls_scores, labels, cls_losses):
         neg_precision_sum = neg_precision_sum + neg_pre
 
         pos_loss = tf.Print(pos_loss, [ibatch, tf.shape(pos_loss), tf.shape(neg_loss), pos_pre, neg_pre], 'Debug message: precision=', first_n=FIRSTN, summarize=400)
-        pos_loss = tf.reduce_sum(pos_loss)
-        neg_loss = tf.reduce_sum(neg_loss)
+
+        # pos_loss = tf.reduce_mean(pos_loss)
+        pos_loss= tf.cond(tf.equal(tf.shape(pos_loss)[0], 0), pos_loss0, lambda: tf.reduce_mean(pos_loss))
+        neg_loss = tf.reduce_mean(neg_loss)
         pos_loss_sum =pos_loss_sum+pos_loss
         neg_loss_sum = neg_loss_sum +neg_loss
 
@@ -152,8 +159,8 @@ def ohem(cls_scores, labels, cls_losses):
                 pos_sampled_inds = tf.squeeze(pos_sampled_inds)
                 # pos_sampled_inds = tf.Print(pos_sampled_inds, [ibatch,tf.shape(pos_sampled_inds),pos_sampled_inds], '2222222222Debug message: pos_sampled_inds= ', first_n=100, summarize=15)
                 pos_loss = tf.gather(cls_loss, pos_sampled_inds,name='gather_pos_loss')
-                # pos_loss = tf.Print(pos_loss, [ibatch, tf.shape(pos_loss),pos_loss], '3333333333Debug message: pos_loss= ', first_n=FIRSTN, summarize=15,name='PRI_pos_1_loss')
-                pos_loss = tf.reduce_sum(pos_loss,name='pos_reducesum')
+                pos_loss = tf.Print(pos_loss, [ibatch, tf.shape(pos_loss),pos_loss], 'Debug message: 1111pos_loss= ', first_n=FIRSTN, summarize=150,name='PRI_pos_1_loss')
+                pos_loss = tf.reduce_mean(pos_loss,name='pos_reducesum')
                 return pos_loss, pos_sampled_inds
 
             def pos0():
@@ -172,7 +179,8 @@ def ohem(cls_scores, labels, cls_losses):
                 # neg_sampled_inds = tf.Print(neg_sampled_inds, [ibatch, tf.shape(neg_sampled_inds)],
                 #                             'Debug message: in true fun neg_sampled_inds= ', first_n=FIRSTN, summarize=15,name='11TPRI_neg_sample')
                 neg_loss = tf.gather(cls_loss, neg_sampled_inds, name='Tgather_negLoss')
-                neg_loss = tf.reduce_sum(neg_loss,name='Tneg_recudesum')
+                neg_loss = tf.Print(neg_loss, [ibatch, tf.shape(neg_loss),neg_loss], 'Debug message: 2222neg_loss= ', first_n=FIRSTN, summarize=150,name='PRI_pos_1_loss')
+                neg_loss = tf.reduce_mean(neg_loss,name='Tneg_recudesum')
                 return pos_loss, neg_loss, pos_sampled_inds, neg_sampled_inds
 
             def false_fun():
@@ -191,7 +199,7 @@ def ohem(cls_scores, labels, cls_losses):
                 # neg_sampled_inds = tf.Print(neg_sampled_inds, [ibatch, tf.shape(neg_sampled_inds)],
                 #                             'Debug message: in false fun neg_sampled_inds= ', first_n=FIRSTN, summarize=100,name='22FPRI_neg_sample')
                 neg_loss = tf.gather(cls_loss, neg_sampled_inds, name='Fgather_negLoss')
-                neg_loss = tf.reduce_sum(neg_loss,name='Fneg_recudesum')
+                neg_loss = tf.reduce_mean(neg_loss,name='Fneg_recudesum')
                 return pos_loss, neg_loss, pos_sampled_inds, neg_sampled_inds
 
             posLoss, negLoss, posinds, neginds = tf.cond(ans, true_fun, false_fun,name='Cond_greater')

@@ -106,6 +106,7 @@ def landmark_transform(ex_rois, gt_rois):
         elif j==1: #h
           target = (gt_rois[:,i,j] - ex_ctr_y) / (ex_heights + 1e-14)
         else: #visibile
+          print("\n******************************proccessing/bbox_transform: j={},gt_rois[:,i,j]={}\n".format(j, gt_rois[:,i,j]))
           target = gt_rois[:,i,j]
         targets.append(target)
 

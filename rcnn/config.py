@@ -58,10 +58,11 @@ config.TRAIN.RPN_POSITIVE_OVERLAP = 0.6
 config.TRAIN.RPN_NEGATIVE_OVERLAP = 0.3
 config.TRAIN.RPN_CLOBBER_POSITIVES = False
 config.TRAIN.RPN_FORCE_POSITIVE = False
-config.TRAIN.FOCALLOSS_alpha=0.5
-config.TRAIN.FOCALLOSS_gama=2
-config.TRAIN.SMOOTHL1_sigma=3
-
+config.TRAIN.FOCALLOSS_alpha = 0.5
+config.TRAIN.FOCALLOSS_gama = 2
+config.TRAIN.SMOOTHL1_sigma = 3
+config.TRAIN.negloss_weight = 1
+config.TRAIN.posloss_weight = 1
 
 # default settings
 default = edict()
@@ -70,8 +71,8 @@ default.shuffle = True
 # default network
 default.network = 'resnet'
 # default.pretrained = './model/retina11-7-23/loss=13.47.ckpt-13'
-# default.pretrained = './model/retina11-8-15/loss=7.76.ckpt-0'
-default.pretrained = './model/new/loss=19.39.ckpt-46'
+default.pretrained = './model/ohem-5cls/loss=3.09.ckpt-12'
+# default.pretrained = './model/new/loss=19.39.ckpt-46'
 default.pretrained_epoch = 0
 # default dataset
 default.dataset = 'retinaface'
@@ -88,7 +89,7 @@ default.use_focalLoss = False #当使用focalloss的时候就不使用ohem了
 default.use_ohem = False
 # default e2e
 # time = str(datetime.datetime.now().month)+'-'+str(datetime.datetime.now().day)+'-'+str(datetime.datetime.now().hour)
-default.prefix = 'model/new-NOohem'
+default.prefix = 'model/reg'
 default.end_epoch = config.epoch
 default.lr_step = [3,9,15,30]
 default.lr = 1e-3

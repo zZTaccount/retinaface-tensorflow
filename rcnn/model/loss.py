@@ -20,10 +20,10 @@ def smoothL1(diff, sigma):
     # 实现公式中的条件分支
     loss = tf.pow(sigma*diff, 2) * (0.5) * position + (diff - 0.5/tf.cast(tf.pow(sigma,2), tf.float32)) * (1. - position)
     # loss = tf.Print(loss, [tf.shape(loss),loss], 'INFO: loss =', first_n=3, summarize=20)
-    loss = tf.reduce_sum(loss)
+    loss = tf.reduce_mean(tf.reduce_sum(loss,axis=[1,2]))
     return loss
 
-def softmax_loss(logits, labels, name="softmax"):
+def  softmax_loss(logits, labels, name="softmax"):
     '''
     :param logits: (batch_size, w*h*anchornum, 2)
     :param labels: (batch_size, w*h*anchornum)

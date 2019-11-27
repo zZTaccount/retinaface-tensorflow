@@ -17,7 +17,7 @@ from rcnn.utils.load_data import load_gt_roidb
 from rcnn.io.rpn import AA
 from rcnn.model.common import *
 
-os.environ['CUDA_VISIBLE_DEVICES']='3'
+os.environ['CUDA_VISIBLE_DEVICES']='1'
 
 def train_net(args, ctx):
     #一些局部变量
@@ -38,8 +38,8 @@ def train_net(args, ctx):
     label_weight = tf.placeholder(tf.int32, (None, 16800))
     bbox_target = tf.placeholder(tf.float32, (None, 8400, 8))
     bbox_weight = tf.placeholder(tf.float32, (None, 8400, 8))
-    landmark_target = tf.placeholder(tf.float32, (None, 20, 8400))
-    landmark_weight = tf.placeholder(tf.float32, (None, 20, 8400))
+    landmark_target = tf.placeholder(tf.float32, (None, 8400, 20))
+    landmark_weight = tf.placeholder(tf.float32, (None, 8400, 20))
     lr = tf.placeholder(tf.float32, name='l_rate')
 
     #定义resnet
@@ -66,7 +66,8 @@ def train_net(args, ctx):
 
     with tf.control_dependencies(update_ops), tf.name_scope('optimizer'):
         # myloss = ohem_loss+bbox_loss+landmark_loss
-        myloss = cls_loss+bbox_loss
+        cls_loss = 2*cls_loss
+        myloss = cls_loss + bbox_loss + 0.5*landmark_loss
         total_loss = myloss+0.5*reg_loss
         optimizer = tf.train.AdamOptimizer(learning_rate=lr)
         # optimizer = tf.train.GradientDescentOptimizer(learning_rate=lr)
@@ -100,7 +101,7 @@ def train_net(args, ctx):
 
             for step in args.lr_step:
                 if epoch_count == step:
-                    learning_rate *=1
+                    learning_rate *= 1
                     print('******** learning_rate change to {}\n'.format(learning_rate))
 
             iter = len(roidb)/config.TRAIN.BATCH_IMAGES
@@ -130,7 +131,7 @@ def train_net(args, ctx):
                                                 lr: learning_rate})
                 saveloss=t_loss
                 # if epoch_count == 0:
-                s ='Epoch{}, Iter{}, Lr{}, cls_loss:{:.2f}, bbox_loss:{:.2f}, landmark_loss:{:.2f}, reg_loss:{:.2f}, total_loss:{:.2f}\n'.format(epoch_count,iter_count,learning_rate,c_loss, b_loss, l_loss, r_loss, t_loss)
+                s ='Epoch{}, Iter{}, Lr{}, cls_loss:{:.2f}, bbox_loss:{:.2f}, landmark_loss:{:.2f}, reg_loss:{:.2f}, total_loss:{:.2f}\n'.format(epoch_count,iter_count,learning_rate,c_loss, b_loss, 0.5*l_loss, r_loss, t_loss)
                 print(s)
                 f.write(s)
                 # else:

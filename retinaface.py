@@ -32,7 +32,8 @@ class RetinaFace:
     self.use_landmarks = True
     self.sess=None
     self.net=None
-    pixel_means=[0.0, 0.0, 0.0]
+    # pixel_means=[0.0, 0.0, 0.0]
+    pixel_means=config.PIXEL_MEANS
     pixel_stds=[1.0, 1.0, 1.0]
     pixel_scale = 1.0
     self.preprocess = False
@@ -138,11 +139,10 @@ class RetinaFace:
           im = _im
         else:
           im = im.astype(np.float32)
-        # im = cv2.resize(im, (640, 640), interpolation=cv2.INTER_LINEAR) #TODO 记得删掉
         im_info = [im.shape[0], im.shape[1]] #h,w
         im_tensor = np.zeros((1, 3, im.shape[0], im.shape[1]))
         for i in range(3):
-            im_tensor[0, i, :, :] = (im[:, :, 2 - i]/self.pixel_scale - self.pixel_means[2 - i])/self.pixel_stds[2-i] #TODO 这里好像将Channel顺序倒过来了
+            im_tensor[0, i, :, :] = (im[:, :, 2 - i]/self.pixel_scale - self.pixel_means[2 - i])/self.pixel_stds[2-i] #TODO 这里好像将Channel顺序倒过来了,与image.py保持一致
         data = np.array(im_tensor)
 
         # 读入模型进行推理，得到预测值
